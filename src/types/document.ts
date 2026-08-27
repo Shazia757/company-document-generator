@@ -12,25 +12,47 @@ export type DocumentFieldOption = {
 export type DocumentField = {
     name: string;
     label: string;
-    type: DocumentFieldType;
-    required?: boolean;
+
+    type:
+    | "text"
+    | "date"
+    | "select"
+    | "textarea"
+    | "table";
+
     placeholder?: string;
-    options?: DocumentFieldOption[];
-    minLength?: number;
-    maxLength?: number;
+    required?: boolean;
+
+    options?: {
+        label: string;
+        value: string;
+    }[];
+
+    columns?: {
+        name: string;
+        label: string;
+        type: "text" | "number";
+        placeholder?: string;
+    }[];
+};
+
+export type DocumentSection = {
+    id: string;
+    title: string;
+    fields: DocumentField[];
 };
 
 export type DocumentTemplate = {
     id: string;
     name: string;
     description: string;
-    fields: DocumentField[];
+    sections: DocumentSection[];
 };
 
 export type GeneratedDocument = {
-  id: string;
-  templateId: string;
-  templateName: string;
-  data: Record<string, string>;
-  createdAt: string;
+    id: string;
+    templateId: string;
+    templateName: string;
+    data: Record<string, string>;
+    createdAt: string;
 };

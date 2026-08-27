@@ -9,6 +9,9 @@ import DocumentPreview from "@/components/DocumentPreview";
 import { documentTemplates } from "@/lib/document-templates";
 import { GeneratedDocument } from "@/types/document";
 
+import { pdf } from "@react-pdf/renderer";
+import DocumentPDF from "@/lib/pdf/DocumentPDF";
+
 export default function Home() {
   const [activeTab, setActiveTab] =
     useState<"new" | "history">("new");
@@ -64,9 +67,81 @@ export default function Home() {
 
     const errors: Record<string, string> = {};
 
-    for (const field of currentTemplate.fields) {
-      if (field.required && !formData[field.name]?.trim()) {
-        errors[field.name] = `${field.label} is required`;
+    for (const section of currentTemplate.sections) {
+      for (const field of section.fields) {
+        const value = formData[field.name]?.trim();
+
+        // Required field validation
+        if (field.required && !value) {
+          errors[field.name] = `${field.label} is required.`;
+          continue;
+        }
+
+        // Skip optional empty fields
+        if (!value) {
+          continue;
+        }
+
+        // Date validation
+        if (field.type === "date") {
+          const date = new Date(value);
+
+          if (Number.isNaN(date.getTime())) {
+            errors[field.name] = `${field.label} must be a valid date.`;
+          }
+        }
+
+        // Invoice items validation
+        if (field.type === "table") {
+          try {
+            const items = JSON.parse(value);
+
+            if (!Array.isArray(items) || items.length === 0) {
+              errors[field.name] = "Add at least one item.";
+              continue;
+            }
+
+            const hasInvalidItem = items.some(
+              (item) =>
+                !item.description?.trim() ||
+                Number(item.quantity) <= 0 ||
+                Number(item.rate) < 0
+            );
+
+            if (hasInvalidItem) {
+              errors[field.name] =
+                "Each item must have a description, quantity greater than 0, and a valid rate.";
+            }
+          } catch {
+            errors[field.name] = "Please enter valid invoice items.";
+          }
+        }
+      }
+    }
+
+    // Date range validation
+    const dateRanges = [
+      ["joiningDate", "lastWorkingDate", "Joining date cannot be after last working date."],
+      ["startDate", "endDate", "Start date cannot be after end date."],
+      ["fromDate", "toDate", "From date cannot be after To date."],
+      ["invoiceDate", "dueDate", "Due date cannot be before invoice date."],
+    ];
+
+    for (const [startField, endField, message] of dateRanges) {
+      const startDate = formData[startField];
+      const endDate = formData[endField];
+
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (
+          !Number.isNaN(start.getTime()) &&
+          !Number.isNaN(end.getTime()) &&
+          start > end
+        ) {
+          errors[endField] = message;
+        }
       }
     }
 
@@ -75,7 +150,7 @@ export default function Home() {
     return Object.keys(errors).length === 0;
   }
 
-  function handleCreateDocument() {
+  async function handleCreateDocument() {
     const isValid = validateForm();
 
     if (!isValid || !currentTemplate) {
@@ -92,7 +167,32 @@ export default function Home() {
 
     setGeneratedDocument(document);
 
-    console.log("Generated document:", document);
+    try {
+      const blob = await pdf(
+        <DocumentPDF
+          template={currentTemplate}
+          formData={formData}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+
+      const link = window.document.createElement("a");
+
+      link.href = url;
+
+      link.download = `${currentTemplate.name
+        .toLowerCase()
+        .replace(/\s+/g, "-")}.pdf`;
+
+      link.click();
+
+      URL.revokeObjectURL(url);
+
+      console.log("Generated document:", document);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+    }
   }
 
   function handleClear() {

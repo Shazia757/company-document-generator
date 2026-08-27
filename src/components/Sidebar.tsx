@@ -1,3 +1,5 @@
+import { company } from "@/lib/company";
+
 type SidebarProps = {
     activeTab: "new" | "history";
     setActiveTab: (tab: "new" | "history") => void;
@@ -32,8 +34,8 @@ export default function Sidebar({
                     type="button"
                     onClick={() => setActiveTab("new")}
                     className={`mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${activeTab === "new"
-                            ? "bg-gray-900 text-white"
-                            : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
                         }`}
                 >
                     <span className="text-base">+</span>
@@ -44,8 +46,8 @@ export default function Sidebar({
                     type="button"
                     onClick={() => setActiveTab("history")}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${activeTab === "history"
-                            ? "bg-gray-900 text-white"
-                            : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
                         }`}
                 >
                     <span className="text-base">◷</span>
@@ -56,7 +58,7 @@ export default function Sidebar({
             {/* Company */}
             <div className="border-t border-gray-200 p-4">
                 <p className="text-xs font-medium text-gray-900">
-                    Company Name
+                    {company.name}
                 </p>
 
                 <p className="mt-1 text-xs text-gray-500">

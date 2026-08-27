@@ -16,7 +16,7 @@ export type CompanyConfig = {
 };
 
 export const company: CompanyConfig = {
-    name: "Devoc",
+    name: "Devoc Technologies",
 
     address: "Company Address, City, State, Country",
 

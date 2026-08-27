@@ -11,6 +11,7 @@ import { GeneratedDocument } from "@/types/document";
 
 import { pdf } from "@react-pdf/renderer";
 import DocumentPDF from "@/lib/pdf/DocumentPDF";
+import { company } from "@/lib/company";
 
 export default function Home() {
   const [activeTab, setActiveTab] =
@@ -228,7 +229,7 @@ export default function Home() {
           </div>
 
           <div className="text-xs font-medium text-gray-500">
-            Company Name
+            {company.name}
           </div>
         </header>
 

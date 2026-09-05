@@ -198,10 +198,28 @@ export default function InvoiceItemsTable({
             <button
                 type="button"
                 onClick={addItem}
-                className="text-sm font-medium text-gray-700 hover:text-gray-950"
+                disabled={!canAddItem()}
+                className="text-sm font-medium text-gray-700 transition hover:text-gray-950 disabled:cursor-not-allowed disabled:text-gray-300"
             >
                 + Add Item
             </button>
         </div>
     );
+
+    function canAddItem() {
+        const lastItem = items[items.length - 1];
+
+        if (!lastItem) {
+            return false;
+        }
+
+        const descriptionValid = lastItem.description.trim().length > 0;
+        const quantityValid = Number(lastItem.quantity) > 0;
+        const rateValid =
+            lastItem.rate.trim() !== "" &&
+            !Number.isNaN(Number(lastItem.rate)) &&
+            Number(lastItem.rate) >= 0;
+
+        return descriptionValid && quantityValid && rateValid;
+    }
 }

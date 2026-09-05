@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Sidebar from "@/components/Sidebar";
-import DocumentForm from "@/components/DocumentForm";
+import DocumentForm, {
+  DocumentFormHandle,
+} from "@/components/DocumentForm";
 import DocumentPreview from "@/components/DocumentPreview";
 
 import { documentTemplates } from "@/lib/document-templates";
@@ -12,6 +14,8 @@ import { GeneratedDocument } from "@/types/document";
 import { pdf } from "@react-pdf/renderer";
 import DocumentPDF from "@/lib/pdf/DocumentPDF";
 import { company } from "@/lib/company";
+
+import DocumentHistory from "@/components/DocumentHistory";
 
 export default function Home() {
   const [activeTab, setActiveTab] =
@@ -30,9 +34,14 @@ export default function Home() {
   const [generatedDocument, setGeneratedDocument] =
     useState<GeneratedDocument | null>(null);
 
+  const [generatedDocuments, setGeneratedDocuments] =
+    useState<GeneratedDocument[]>([]);
+
   const currentTemplate = documentTemplates.find(
     (template) => template.id === selectedTemplate
   );
+
+  const documentFormRef = useRef<DocumentFormHandle>(null);
 
   function handleFieldChange(
     fieldName: string,
@@ -148,31 +157,53 @@ export default function Home() {
 
     setFormErrors(errors);
 
-    return Object.keys(errors).length === 0;
+    return errors;
   }
 
   async function handleCreateDocument() {
-    const isValid = validateForm();
+    const errors = validateForm();
 
-    if (!isValid || !currentTemplate) {
+    if (Object.keys(errors).length > 0 || !currentTemplate) {
+      const firstErrorField = Object.keys(errors)[0];
+
+      if (firstErrorField) {
+        documentFormRef.current?.focusField(firstErrorField);
+      }
+
       return;
     }
+
+    const normalizedFormData = Object.fromEntries(
+      Object.entries(formData).map(([key, value]) => [
+        key,
+        key === "items"
+          ? value
+          : typeof value === "string"
+            ? value.trim().replace(/\n{2,}/g, "\n")
+            : value,
+      ])
+    );
 
     const document: GeneratedDocument = {
       id: crypto.randomUUID(),
       templateId: currentTemplate.id,
       templateName: currentTemplate.name,
-      data: { ...formData },
+      data: normalizedFormData,
       createdAt: new Date().toISOString(),
     };
 
     setGeneratedDocument(document);
 
+    setGeneratedDocuments((previous) => [
+      ...previous,
+      document,
+    ]);
+
     try {
       const blob = await pdf(
         <DocumentPDF
           template={currentTemplate}
-          formData={formData}
+          formData={normalizedFormData}
         />
       ).toBlob();
 
@@ -289,6 +320,7 @@ export default function Home() {
                   </div>
 
                   <DocumentForm
+                    ref={documentFormRef}
                     template={currentTemplate}
                     formData={formData}
                     formErrors={formErrors}
@@ -349,17 +381,16 @@ export default function Home() {
           </div>
         ) : (
           /* History */
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Document History
-              </h2>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Generated documents will appear here.
-              </p>
-            </div>
-          </div>
+          <DocumentHistory
+            documents={generatedDocuments}
+            onReopen={(document) => {
+              setSelectedTemplate(document.templateId);
+              setFormData({ ...document.data });
+              setFormErrors({});
+              setGeneratedDocument(document);
+              setActiveTab("new");
+            }}
+          />
         )}
       </section>
     </main>

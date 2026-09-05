@@ -50,9 +50,10 @@ export type DocumentTemplate = {
 };
 
 export type GeneratedDocument = {
-    id: string;
-    templateId: string;
-    templateName: string;
-    data: Record<string, string>;
-    createdAt: string;
+  id: string;
+  templateId: string;
+  templateName: string;
+  data: Record<string, string>;
+  createdAt: string;
+  createdBy?: string;
 };

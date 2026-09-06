@@ -18,7 +18,13 @@ import { company } from "@/lib/company";
 
 import DocumentHistory from "@/components/DocumentHistory";
 
-export default function Home() {
+type DocumentGeneratorProps = {
+    initialDocuments: GeneratedDocument[];
+};
+
+export default function Home({
+    initialDocuments,
+}: DocumentGeneratorProps) {
     const [activeTab, setActiveTab] =
         useState<"new" | "history">("new");
 
@@ -36,7 +42,7 @@ export default function Home() {
         useState<GeneratedDocument | null>(null);
 
     const [generatedDocuments, setGeneratedDocuments] =
-        useState<GeneratedDocument[]>([]);
+        useState<GeneratedDocument[]>(initialDocuments);
 
     const currentTemplate = documentTemplates.find(
         (template) => template.id === selectedTemplate

@@ -34,3 +34,22 @@ export async function saveDocument(input: SaveDocumentInput) {
         createdAt: document.createdAt,
     };
 }
+
+export async function getDocuments() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const documents = await prisma.document.findMany({
+    where: {
+      createdById: session.user.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return documents;
+}

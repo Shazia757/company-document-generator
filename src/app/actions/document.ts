@@ -16,6 +16,8 @@ export async function saveDocument(input: SaveDocumentInput) {
         throw new Error("Unauthorized");
     }
 
+    console.log("Saving document for user:", session.user.id);
+
     const document = await prisma.document.create({
         data: {
             templateId: input.templateId,
@@ -24,6 +26,8 @@ export async function saveDocument(input: SaveDocumentInput) {
             createdById: session.user.id,
         },
     });
+
+    console.log("Document saved:", document.id);
 
     return {
         id: document.id,

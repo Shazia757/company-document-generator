@@ -17,6 +17,7 @@ import DocumentPDF from "@/lib/pdf/DocumentPDF";
 import { company } from "@/lib/company";
 
 import DocumentHistory from "@/components/DocumentHistory";
+import DocumentDetails from "@/components/DocumentDetails";
 
 type DocumentGeneratorProps = {
     initialDocuments: GeneratedDocument[];
@@ -41,12 +42,17 @@ export default function Home({
     const [generatedDocument, setGeneratedDocument] =
         useState<GeneratedDocument | null>(null);
 
+    const [viewingDocument, setViewingDocument] =
+        useState<GeneratedDocument | null>(null);
+
     const [generatedDocuments, setGeneratedDocuments] =
         useState<GeneratedDocument[]>(initialDocuments);
 
     const currentTemplate = documentTemplates.find(
         (template) => template.id === selectedTemplate
     );
+
+
 
     const documentFormRef = useRef<DocumentFormHandle>(null);
 
@@ -250,6 +256,42 @@ export default function Home({
         setGeneratedDocument(null);
     }
 
+    async function handleDownloadDocument(document: GeneratedDocument) {
+        const template = documentTemplates.find(
+            (template) => template.id === document.templateId
+        );
+
+        if (!template) {
+            console.error("Template not found:", document.templateId);
+            return;
+        }
+
+        try {
+            const blob = await pdf(
+                <DocumentPDF
+                    template={template}
+                    formData={document.data}
+                />
+            ).toBlob();
+
+            const url = URL.createObjectURL(blob);
+
+            const link = window.document.createElement("a");
+
+            link.href = url;
+
+            link.download = `${template.name
+                .toLowerCase()
+                .replace(/\s+/g, "-")}.pdf`;
+
+            link.click();
+
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("PDF download failed:", error);
+        }
+    }
+
     return (
         <main className="flex h-screen overflow-hidden bg-gray-100">
             {/* Sidebar */}
@@ -400,6 +442,9 @@ export default function Home({
                     /* History */
                     <DocumentHistory
                         documents={generatedDocuments}
+                        onView={(document) => {
+                            setViewingDocument(document);
+                        }}
                         onReopen={(document) => {
                             setSelectedTemplate(document.templateId);
                             setFormData({ ...document.data });
@@ -407,9 +452,39 @@ export default function Home({
                             setGeneratedDocument(document);
                             setActiveTab("new");
                         }}
+                        onDownload={handleDownloadDocument}
+
+                        onDelete={(documentId) => {
+                            setGeneratedDocuments((previous) =>
+                                previous.filter(
+                                    (document) => document.id !== documentId
+                                )
+                            );
+                        }}
                     />
                 )}
             </section>
+            {viewingDocument && (
+                <DocumentDetails
+                    document={viewingDocument}
+                    template={
+                        documentTemplates.find(
+                            (template) =>
+                                template.id === viewingDocument.templateId
+                        )!
+                    }
+                    onClose={() => setViewingDocument(null)}
+                    onReopen={(document) => {
+                        setSelectedTemplate(document.templateId);
+                        setFormData({ ...document.data });
+                        setFormErrors({});
+                        setGeneratedDocument(document);
+                        setViewingDocument(null);
+                        setActiveTab("new");
+                    }}
+                    onDownload={handleDownloadDocument}
+                />
+            )}
         </main>
     );
 }

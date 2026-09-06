@@ -1,8 +1,12 @@
+import { deleteDocument } from "@/app/actions/document";
 import { GeneratedDocument } from "@/types/document";
 
 type DocumentHistoryProps = {
     documents: GeneratedDocument[];
     onReopen: (document: GeneratedDocument) => void;
+    onDownload: (document: GeneratedDocument) => void;
+    onDelete: (documentId: string) => void;
+    onView: (document: GeneratedDocument) => void;
 };
 
 function formatCreatedAt(value: string) {
@@ -41,6 +45,9 @@ function getRecipient(document: GeneratedDocument) {
 export default function DocumentHistory({
     documents,
     onReopen,
+    onDownload,
+    onDelete,
+    onView,
 }: DocumentHistoryProps) {
     if (documents.length === 0) {
         return (
@@ -109,13 +116,56 @@ export default function DocumentHistory({
                                 {formatCreatedAt(document.createdAt)}
                             </p>
 
-                            <button
-                                type="button"
-                                onClick={() => onReopen(document)}
-                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
-                            >
-                                Reopen
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => onView(document)}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                                >
+                                    View
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => onReopen(document)}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                                >
+                                    Reopen
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => onDownload(document)}
+                                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                                >
+                                    Download
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        const confirmed = window.confirm(
+                                            "Are you sure you want to delete this document?"
+                                        );
+
+                                        if (!confirmed) {
+                                            return;
+                                        }
+
+                                        try {
+                                            await deleteDocument(document.id);
+                                            onDelete(document.id);
+                                        } catch (error) {
+                                            console.error(
+                                                "Failed to delete document:",
+                                                error
+                                            );
+                                        }
+                                    }}
+                                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                >
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>

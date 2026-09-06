@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getDocuments } from "@/app/actions/document";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 import DocumentGenerator from "./DocumentGenerator";
@@ -11,7 +11,14 @@ export default async function Page() {
     redirect("/login");
   }
 
-  const documents = await getDocuments();
+  const documents = await prisma.document.findMany({
+    where: {
+      createdById: session.user.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   const history = documents.map((document) => ({
     id: document.id,

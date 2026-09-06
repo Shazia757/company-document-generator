@@ -1,62 +1,33 @@
-import { signIn } from "@/auth";
+
+import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <form
-        action={async (formData) => {
-          "use server";
+    <main className="flex min-h-screen items-center justify-center bg-gray-100 px-6">
+      <div className="w-full max-w-md">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="mb-8">
+            <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-900 text-sm font-semibold text-white">
+              CD
+            </div>
 
-          await signIn("credentials", {
-            email: formData.get("email"),
-            password: formData.get("password"),
-            redirectTo: "/",
-          });
-        }}
-        className="w-full max-w-sm space-y-4"
-      >
-        <div>
-          <h1 className="text-2xl font-semibold">Admin Login</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Sign in to access the document generator.
-          </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+              Admin Login
+            </h1>
+
+            <p className="mt-2 text-sm leading-6 text-gray-500">
+              Sign in to access the company document generator.
+            </p>
+          </div>
+
+          <LoginForm />
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full rounded bg-black px-4 py-2 text-white"
-        >
-          Sign in
-        </button>
-      </form>
+        <p className="mt-5 text-center text-xs text-gray-400">
+          Authorized company users only
+        </p>
+      </div>
     </main>
   );
 }
+

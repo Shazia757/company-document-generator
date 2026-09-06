@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { signOut } from "next-auth/react";
 
 import Sidebar from "@/components/Sidebar";
 import DocumentForm, {
@@ -213,11 +214,25 @@ export default function Home({
         ]);
 
         try {
-            await saveDocument({
+            const savedDocument = await saveDocument({
                 templateId: document.templateId,
                 templateName: document.templateName,
                 data: document.data,
             });
+
+            const savedDocumentWithId = {
+                ...document,
+                id: savedDocument.id,
+                createdAt: savedDocument.createdAt.toISOString(),
+            };
+
+            setGeneratedDocument(savedDocumentWithId);
+
+            setGeneratedDocuments((previous) =>
+                previous.map((item) =>
+                    item.id === document.id ? savedDocumentWithId : item
+                )
+            );
         } catch (error) {
             console.error("Failed to save document:", error);
         }
@@ -318,8 +333,18 @@ export default function Home({
                         </p>
                     </div>
 
-                    <div className="text-xs font-medium text-gray-500">
-                        {company.name}
+                    <div className="flex items-center gap-4">
+                        <div className="text-xs font-medium text-gray-500">
+                            {company.name}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => signOut({ callbackUrl: "/login" })}
+                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                        >
+                            Sign out
+                        </button>
                     </div>
                 </header>
 

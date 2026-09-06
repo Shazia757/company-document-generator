@@ -1,11 +1,13 @@
-
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function LoginForm() {
+import { signUp } from "@/app/actions/auth";
+
+export default function SignUpForm() {
+    const router = useRouter();
+
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -14,26 +16,42 @@ export default function LoginForm() {
         setError("");
         setIsLoading(true);
 
-        const email = formData.get("email");
-        const password = formData.get("password");
+        const name = String(formData.get("name") ?? "");
+        const email = String(formData.get("email") ?? "");
+        const password = String(formData.get("password") ?? "");
 
-        const result = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-        });
+        const result = await signUp(name, email, password);
 
-        if (result?.error) {
-            setError("Invalid email or password. Please try again.");
+        if (!result.success) {
+            setError(result.error);
             setIsLoading(false);
             return;
         }
 
-        window.location.href = "/";
+        router.push("/login?registered=true");
     }
 
     return (
         <form action={handleSubmit} className="space-y-5">
+            <div>
+                <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700"
+                >
+                    Full name
+                </label>
+
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required
+                    autoComplete="name"
+                    placeholder="Enter your name"
+                    className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                />
+            </div>
+
             <div>
                 <label
                     htmlFor="email"
@@ -48,7 +66,7 @@ export default function LoginForm() {
                     type="email"
                     required
                     autoComplete="email"
-                    placeholder="admin@company.com"
+                    placeholder="you@example.com"
                     className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                 />
             </div>
@@ -67,8 +85,8 @@ export default function LoginForm() {
                         name="password"
                         type={showPassword ? "text" : "password"}
                         required
-                        autoComplete="current-password"
-                        placeholder="Enter your password"
+                        autoComplete="new-password"
+                        placeholder="At least 8 characters"
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-16 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                     />
 
@@ -98,18 +116,8 @@ export default function LoginForm() {
                 disabled={isLoading}
                 className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
             >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? "Creating account..." : "Create account"}
             </button>
-            <div className="text-center text-sm text-gray-500">
-                Don't have an account?{" "}
-                <Link
-                    href="/signup"
-                    className="font-medium text-gray-900 hover:underline"
-                >
-                    Sign up
-                </Link>
-            </div>
         </form>
     );
 }
-
